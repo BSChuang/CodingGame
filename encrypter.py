@@ -18,3 +18,6 @@ for i in range (len(encrpyted)):
     switched = allChar[len(allChar) - allChar.index(encrpyted[i])]
     unencrypted += switched
 print (unencrypted)
+
+
+
