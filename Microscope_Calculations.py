@@ -1,6 +1,6 @@
-fov = 1800
-specimen = 1.1
-ml = 11.56
+fov = 450
+specimen = 15
+ml = 4.92
 
 ml = ml * 10000
 al = fov/specimen
