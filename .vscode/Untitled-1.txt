@@ -1,0 +1,2 @@
+team = 'Terriers'
+print(team[-1])
