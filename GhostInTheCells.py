@@ -4,14 +4,25 @@ import random
 
 factory_count = int(input())  # the number of factories
 link_count = int(input())  # the number of links between factories
-for i in range(link_count):
-    factory_1, factory_2, distance = [int(j) for j in input().split()]
+factory_1, factory_2, distance = [int(j) for j in input().split()]
 
 def Move(source, destination, cyborgCount):
     return "MOVE" + " " + str(source) + " " + str(destination) + " " + str(round(cyborgCount)) + ";"
 
 def Bomb(source, destination):
     return "BOMB" + " " + str(source) + " " + str(destination) + ";"
+
+def SendCyb(destination, count):
+    cybsToSend = abs(count)
+    moveT = ""
+    for j in range(len(ownFacts)):
+        if ownFacts[j] != destination:
+            if cybsToSend > facts[ownFacts[j]][1]: # If there are more cybs that need to be sent than cybs available, move all
+                cybsToSend -= facts[ownFacts[j]][1]
+                moveT += Move(ownFacts[j], destination, facts[ownFacts[j]][1])
+            else:
+                moveT += Move(ownFacts[j], destination, cybsToSend) # If there are enough cybs to send, send all necessary
+    return moveT
 
 turn = 0
 while True:
@@ -20,6 +31,7 @@ while True:
     entity_count = int(input())  # the number of entities (e.g. factories and troops)
     
     facts = [] # [Owner, # of cybs, Factory production]
+    factDist = []
     troops = [] # [Owner, Fact Depart, Fact Arrive, # of Cybs, Distance]
     
     ownCyb = 0
@@ -52,6 +64,15 @@ while True:
     
     stillNeut = False;
     stillOpp = False;
+
+    for i in range(link_count):
+        tempList = []
+
+        tempList.append(factory_1)
+        tempList.append(factory_2)
+        tempList.append(distance)
+        factDist.append
+
     for i in range(entity_count):
         entity_id, entity_type, arg_1, arg_2, arg_3, arg_4, arg_5 = input().split()
         entity_id = int(entity_id)
@@ -107,41 +128,56 @@ while True:
                 ownCyb += int(arg_4)
             if int(arg_1) == -1:
                 oppCyb += int(arg_4)
+    print("Turn: " + str(turn),file=sys.stderr)
     print("Production: " + str(ownProd) + ", " + str(oppProd),file=sys.stderr)
     print("Cyborgs: " + str(ownCyb) + ", " + str(oppCyb),file=sys.stderr)
     print("Fact Cybs: " + str(factCyb),file=sys.stderr)
     print("Facts: " + str(facts),file=sys.stderr)
     print("Troops: " + str(troops),file=sys.stderr)
-    
-
     # OFFENSE - Attack whatever they attack or claim neutrals. Have enough cyborgs to fend off an attack
-    if turn == 3 or turn == 13:
-        maxOppFact = oppFacts[oppFactCyb.index(max(oppFactCyb))] # Find highest opp factory production
+    if turn == 3 or turn == 12: # BOMB ATTACK
+        maxOppFact = oppFacts[oppFactProd.index(max(oppFactProd))] # Find highest opp factory cyborgs
         moveText += Bomb(ownFacts[0], maxOppFact)
-    if turn == 1 or turn == 4 or turn == 8:
-        maxNeutFact = neutFacts[neutFactProd.index(max(neutFactProd))] # Find highest neut factory production
-        ownCybFact = ownFacts[ownFactCyb.index(max(ownFactCyb))] # Find highest own factory cyborgs
-        moveText += Move(ownCybFact, maxNeutFact, max(ownFactCyb) / 2) # 
-    #elif :
-        
-    moveText += "WAIT;"
     
+    if len(neutFacts) > 0:
+        if turn % 1 == 0 and max(neutFactProd) > 0 and max(neutFactProd) > 0 and len(ownFacts) > 0: # NEUTRAL ATTACK. Attacks highest prod neutral
+            tempNeutFacts = neutFacts
+            tempNeutFactProd = neutFactProd
+            for i in range(len(tempNeutFacts)):
+                if factCyb[tempNeutFacts[i]] > 0:
+                    tempNeutFacts[i] = -1 # Makes neut facts which are turning invalid
+                    tempNeutFactProd[i] = -1 # Makes neut facts which are turning invalid
+            if max(neutFactProd) > 0 and max(neutFactProd) > 0 and len(ownFacts) > 0:
+                maxNeutFact = tempNeutFacts[tempNeutFactProd.index(max(tempNeutFactProd))] # Find highest neut factory production that is already not turning
+                print("Test: " + str(maxNeutFact),file=sys.stderr)
+                moveText += SendCyb(maxNeutFact, (facts[maxNeutFact][1] + 1) * 6/5)
     
+    if (turn > 75 and ownCyb > oppCyb * 2) and turn % 3 == 0 and len(oppFacts) != 0: # Attack lowest enemy every 10 turns
+        oppLowCybFact = oppFacts[oppFactCyb.index(min(oppFactCyb))] # fact which has the lowest Cybs
+        moveText += SendCyb(oppLowCybFact, facts[oppLowCybFact][1] * 4/3 + 1)
     # DEFENSE - If factory is being attacked, send equal to help troops
     for i in range(len(ownFacts)):
-        if facts[ownFacts[i]][0] == 1 and factCyb[ownFacts[i]] < 1: # If its gone negative and still own factory, send equal troops plus some more, 
+        if facts[ownFacts[i]][0] == 1 and factCyb[ownFacts[i]] < 1  and len(ownFacts) > 0 and facts[ownFacts[i]][2] > 0: # if still own factory and its gone negative and production is not 0, send equal troops
+            moveText += SendCyb(ownFacts[i], factCyb[ownFacts[i]] * 2)
+    
+    for i in range(len(factCyb)):
+        if facts[i][0] == 1 and facts[i][1] > 15:
+            moveText += "INC " + str(i) + ";"
+    
+            '''
             cybsToSend = abs(factCyb[ownFacts[i]]) + 3
             for j in range(len(ownFacts)): # Sending enough cyborgs to necessary factory
                 if j != i: # If not the same factory
                     if cybsToSend > facts[ownFacts[j]][1]: # If there are more cybs that need to be sent than cybs available, move all minus 2
                         cybsToSend -= facts[ownFacts[j]][1]
-                        moveText += Move(ownFacts[j], ownFacts[i], facts[ownFacts[j]][1] - 2)
+                        moveText += Move(ownFacts[j], ownFacts[i], facts[ownFacts[j]][1])
                     else:
-                        moveText += Move(ownFacts[j], ownFacts[i], cybsToSend) # If there are enough cybs to send, send all necessary
+                        moveText += Move(ownFacts[j], ownFacts[i], cybsToSend) # If there are enough cybs to send, send all necessary'''
     #print(str(facts[ownFacts[i]][0]) + " " + str(factCyb[ownFacts[i]]), file=sys.stderr)
 
 
-
+    if moveText == "":
+        moveText = "WAIT;"
     print(moveText[:-1])
 
 
