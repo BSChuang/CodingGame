@@ -8,6 +8,11 @@ num1 = 5
 d = d
 numN = 9
 Sn = x
+
+
+
+
+
 # numN term of sequence
 def fNumN(termN, num1, d, numN, Sn):
     numN = num1 + (termN - 1) * d
